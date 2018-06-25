@@ -11,7 +11,7 @@ logger = logging.getLogger('meiduo')
 
 
 # 封装异常处理，以便输出日志错误信息（因为django原本不会识别数据库错误信息）
-def exception_handle(exc, context):
+def exception_handler(exc, context):
     """
         自定义异常处理
         :param exc: 异常

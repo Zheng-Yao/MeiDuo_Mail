@@ -14,6 +14,8 @@ import os
 import sys
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
+import datetime
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(BASE_DIR, 'apps'))
 
@@ -29,7 +31,6 @@ DEBUG = True
 ALLOWED_HOSTS = ['*']
 
 # Application definition
-print(os.path.abspath('users'))
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -37,11 +38,15 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
     'users.apps.UsersConfig',
-    'rest_framework'
+    'rest_framework',
+    'corsheaders',
+    'verifications.apps.VerificationsConfig',
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -50,6 +55,15 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+# cors配置
+CORS_ORIGIN_WHITELIST = (
+    '127.0.0.1:8080',
+    '127.0.0.1:8000',
+    'localhost:8080',
+    'www.meiduo.site:8080'
+)
+CORS_ALLOW_CREDENTIALS = True
+# 允许携带cookie
 
 ROOT_URLCONF = 'meiduo_mall.urls'
 
@@ -77,10 +91,10 @@ WSGI_APPLICATION = 'meiduo_mall.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'HOST': '192.168.146.135',  # 数据库主机
+        'HOST': '111.230.135.89',  # 数据库主机
         'PORT': 3306,  # 数据库端口
-        'USER': 'meiduo_user',  # 数据库用户名
-        'PASSWORD': 'meiduo',  # 数据库用户密码
+        'USER': 'root',  # 数据库用户名
+        'PASSWORD': 'mysql',  # 数据库用户密码
         'NAME': 'meiduo_mall'  # 数据库名字
     }
 }
@@ -88,21 +102,21 @@ DATABASES = {
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://192.168.146.135:6379/0",
+        "LOCATION": "redis://111.230.135.89:6379/0",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         }
     },
     "session": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://192.168.146.135:6379/1",
+        "LOCATION": "redis://111.230.135.89/1",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         }
     },
     "Image_code": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://192.168.146.135:6379/2",
+        "LOCATION": "redis://111.230.135.89/2",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         }
@@ -190,5 +204,25 @@ LOGGING = {
 REST_FRAMEWORK = {
     # 异常处理
     'EXCEPTION_HANDLER': 'meiduo_mall.utils.exceptions.exception_handler',
+    # 设置reset_framework中新增jwt认证机制
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        # JSONWebTokenAuthentication 就是 安装模块中自带
+        'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
+        # 原来rest框架中自带
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+    ),
+}
+JWT_AUTH = {
+    'JWT_EXPIRATION_DELTA': datetime.timedelta(days=1),
+    'JWT_RESPONSE_PAYLOAD_HANDLER': 'users.utils.jwt_response_payload_handler',
 }
 AUTH_USER_MODEL = 'users.User'
+# 重新设置了用户认证模型类判断用户名和密码的方法
+AUTHENTICATION_BACKENDS = [
+    'users.utils.UsernameMobileAuthBackend',
+]
+# 重新设置了用户认证模型类判断用户名和密码的方法
+AUTHENTICATION_BACKENDS = [
+    'users.utils.UsernameMobileAuthBackend',
+]

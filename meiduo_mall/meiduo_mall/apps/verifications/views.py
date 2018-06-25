@@ -12,6 +12,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from meiduo_mall.apps.verifications import serializers
 from meiduo_mall.apps.verifications.constants import MAX_TIME_IMAGE_CODE, SMS_TIME, TMP_ID, SEND_SMS_TIME
+from meiduo_mall.apps.verifications.serializers import ImageCodeCheckSerializer
 from meiduo_mall.libs.captcha.captcha import captcha
 
 # 图片验证码
@@ -43,8 +44,11 @@ class SMSImageCode(GenericAPIView):
     serializer_class = serializers.ImageCodeCheckSerializer
 
     def get(self, request, moblie):
-        serializer = self.get_serializer(data=request.query_params)
-        serializer.is_valid(raise_exception=True)
+        print('ceshi', request.query_params)
+        serializer1 = self.get_serializer(data=request.query_params)
+        # serializer1 = ImageCodeCheckSerializer(data=request.query_params)
+        # 这种方式无法在序列化器validate中用self.context['xx'].kwargs['xx']
+        serializer1.is_valid(raise_exception=True)
         # 随机生成6位手机验证码
         moblie_code = '%06d' % random.randint(0, 999999)
         # 验证完毕，进行redis批量操作,提高redis执行效率
@@ -53,7 +57,8 @@ class SMSImageCode(GenericAPIView):
         p1.setex('send_flag_%s' % moblie, SEND_SMS_TIME, 1)
         p1.setex('sms_%s' % moblie, SMS_TIME, moblie_code)
         p1.execute()
-        ccp = CCP()
-        time = str(SMS_TIME / 60)
-        ccp.send_template_sms(moblie, [moblie_code, time], TMP_ID)
+        # ccp = CCP()
+        # time = str(SMS_TIME / 60)
+        # ccp.send_template_sms(moblie, [moblie_code, time], TMP_ID)
+        print('发送验证码', moblie_code)
         return Response({'message': 'OK'}, status.HTTP_200_OK)
